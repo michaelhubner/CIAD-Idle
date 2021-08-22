@@ -6,9 +6,6 @@ from game import GameStateMaschine
 def main():
 
     pygame.init()
-
-
-
     game = GameStateMaschine()
     game.run()
 

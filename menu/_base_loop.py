@@ -14,7 +14,8 @@ class BaseLoop():
         self.screen = screen
         self.clock = clock
 
-        self.running = True
+        self.running = False
+        self.config = None
         self._logger = logging.getLogger(self.__class__.__name__)
 
 
@@ -33,10 +34,19 @@ class BaseLoop():
             pygame.display.flip()
 
 
-    def stop(self):
+    def start(self, config=None):
+        self.running = True
+        self.config = self._load_config(config)
+
+
+    def stop(self, **kwargs):
 
         self.running = False
+        self.config = self._generate_config()
+        self.screen.fill((0,0,0))
+        pygame.display.flip()
         self._logger.debug("Stopped")
+
 
     def _handle_input(self):
 
@@ -55,4 +65,10 @@ class BaseLoop():
 
     def _update_model(self):
         raise NotImplementedError
+
+    def _load_config(self, config):
+        self.config = config
+
+    def _generate_config(self):
+        return {}
 

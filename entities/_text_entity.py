@@ -1,7 +1,7 @@
 import pygame
 
+import logging
 
-TEXT_GROUP = pygame.sprite.RenderUpdates()
 
 class RenderText(pygame.sprite.Sprite):
 
@@ -9,7 +9,10 @@ class RenderText(pygame.sprite.Sprite):
     pos_rel = None
 
     def __init__(self, screen, text='text', pos=(0, 0), pos_rel=(1, 3),
-                 font=None, size=20, color=(255, 255, 255), antialias=True):
+                 font=None, size=20, color=(255, 255, 255),
+                 antialias=True,
+                 selcetable=False,
+                 unlocked=False):
 
         pygame.sprite.Sprite.__init__(self)
         self.font = pygame.font.Font(font, size)
@@ -19,10 +22,27 @@ class RenderText(pygame.sprite.Sprite):
         self.pos_rel = pos_rel
         self.screen = screen
         self.antialias = antialias
+        self.selectable = selcetable
 
-        TEXT_GROUP.add(self)
+        self._selected = False
 
         self.rerender()
+
+        self._logger = logging.getLogger(self.__class__.__name__)
+
+
+
+    @property
+    def selected(self):
+        return self._selected
+
+    @selected.setter
+    def selected(self, value):
+
+        if self.selectable:
+            self._selected = value
+            #self.rerender()
+
 
     def update(self):
         pass
@@ -41,6 +61,12 @@ class RenderText(pygame.sprite.Sprite):
         self.rerender()
 
     def rerender(self):
-        self.image = self.font.render(self.text, self.antialias, self.color)
+
+        text = self.text
+
+        if self.selectable and self._selected:
+            text = "-->" + text
+
+        self.image = self.font.render(text, self.antialias, self.color)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = self.calculate_position()

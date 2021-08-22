@@ -4,7 +4,7 @@ import sys
 import globs
 import logging
 
-from menu import Intro, MainGame
+from menu import Intro, MainGame, EndOfDay
 
 formatter = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.DEBUG, format=formatter)
@@ -32,12 +32,12 @@ class GameStateMaschine():
         self.running = True
 
         self._states = {"Intro": Intro(self.screen, self.clock),
-                        "Intro Weapoen": MainGame(self.screen, self.clock),
-                        "EOD": MainGame(self.screen, self.clock),
+                        "EOD": EndOfDay(self.screen, self.clock),
                         "Main": MainGame(self.screen, self.clock)}
 
 
         self.state = self._states["Intro"]
+        self.state.start()
 
         self._logger = logging.getLogger(self.__class__.__name__)
 
@@ -49,7 +49,7 @@ class GameStateMaschine():
 
             self._handle_input()
             self.state.run()
-            self._change_state()
+            self._change_state(self.state)
 
             self.clock.tick(globs.FPS)
 
@@ -64,14 +64,18 @@ class GameStateMaschine():
                 sys.exit()
 
 
-    def _change_state(self):
 
-        if self.state.running:
-            print(f"Current state: {self.state}")
 
-        else:
-            new_state = next(state for state in self._states if self._states[state].running)
-            self.state = self._states[new_state]
+    def _change_state(self, last_state):
+
+        if last_state == self._states["Intro"]:
+            self.state = self._states["EOD"]
+
+        elif last_state == self._states["EOD"]:
+            self.state = self._states["Main"]
+
+        self.state.start(config=last_state.config)
+
 
 
 

@@ -5,8 +5,6 @@ import globs
 from background.map import Map
 
 from entities._text_entity import RenderText
-from entities._text_entity import TEXT_GROUP
-from entities._entity import CLICKABLE_GROUP, ENEMY_GROUP
 from entities._entity import Enemy, CentralWeaponField
 
 from models import EnemyModel, SwordModel
@@ -15,10 +13,13 @@ import logging
 
 from ._base_loop import BaseLoop
 
-enemy_image = r'D:\Projekte\Python\CIAD-Idle\resources\Sprites\Entitys\PNG\alien.png'
+enemy_image = r''
 central_weapon_image = r'D:\Projekte\Python\CIAD-Idle\resources\Sprites\Entitys\Export_64\Sword.png'
 
 class MainGame(BaseLoop):
+
+    CLICKABLE_GROUP = pygame.sprite.Group()
+    ENEMY_GROUP = pygame.sprite.Group()
 
     def __init__(self, screen, clock):
 
@@ -33,20 +34,15 @@ class MainGame(BaseLoop):
                                       pos_rel=(1, 3))
 
         self.enemy_model = EnemyModel(max_hp=10, defense=0)
-        self.sword_model = SwordModel(damage=1)
-
         self.current_enemy = Enemy(model=self.enemy_model,
-                                   image=enemy_image,
+                                   image=globs.IMAGES["enemy"],
                                    pos=globs.ENEMY_POS,
                                    size=(2,2),
-                                   clickable=False)
+                                   clickable=False,
+                                   animate=True)
+        self.ENEMY_GROUP.add(self.current_enemy)
 
-        self.weapon_field = CentralWeaponField(enemy_model=self.enemy_model,
-                                               weapon_model=self.sword_model,
-                                               image=central_weapon_image,
-                                               pos=globs.CENTRAL_WEAPON_POS,
-                                               size = (3,2),
-                                               clickable=True)
+        self.weapon = None
 
         self._logger = logging.getLogger(self.__class__.__name__)
 
@@ -62,22 +58,47 @@ class MainGame(BaseLoop):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 # First handle clickable Groups
-                for clickable in CLICKABLE_GROUP:
+                for clickable in self.CLICKABLE_GROUP:
                     if clickable.rect.collidepoint(x, y):
                         clickable.update()
 
+
     def _update_model(self):
 
-        ENEMY_GROUP.update()
+        self.ENEMY_GROUP.update()
 
 
     def _update_screen(self):
 
         self.map.tile_group.draw(self.screen)
 
-        TEXT_GROUP.draw(self.screen)
-        CLICKABLE_GROUP.draw(self.screen)
-        ENEMY_GROUP.draw(self.screen)
+        self.CLICKABLE_GROUP.draw(self.screen)
+        self.ENEMY_GROUP.draw(self.screen)
 
         self.status_text.print_text('FPS: %d' % self.clock.get_fps())
 
+
+    def _load_config(self, config):
+
+        super(MainGame, self)._load_config(config=config)
+
+        if self.config["weapon"] == "sword":
+            self.weapon_model = SwordModel(damage=1)
+            self.weapon = CentralWeaponField(enemy_model=self.enemy_model,
+                                             weapon_model=self.weapon_model,
+                                             image=globs.IMAGES["sword_0"],
+                                             pos=globs.CENTRAL_WEAPON_POS,
+                                             size=(2, 2),
+                                             clickable=True)
+            self.CLICKABLE_GROUP.add(self.weapon)
+
+        elif self.config["weapon"] == "wand":
+            self.weapon_model = SwordModel(damage=1)
+            self.weapon = CentralWeaponField(enemy_model=self.enemy_model,
+                                             weapon_model=self.weapon_model,
+                                             image=globs.IMAGES["wand_0"],
+                                             pos=globs.CENTRAL_WEAPON_POS,
+                                             size=(3, 2),
+                                             clickable=True)
+
+            self.CLICKABLE_GROUP.add(self.weapon)
